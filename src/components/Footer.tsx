@@ -1,3 +1,5 @@
+import FeedbackButton from './FeedbackButton';
+
 export default function Footer() {
   return (
     <footer className="bg-dark-800 border-t border-purple-800/30 py-12 mt-12">
@@ -43,6 +45,8 @@ export default function Footer() {
             </div>
           </div>
         </div>
+
+        <FeedbackButton />
 
         <div className="border-t border-purple-800/30 pt-6 text-center">
           <p className="text-gray-600 text-sm">
