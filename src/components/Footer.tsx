@@ -7,7 +7,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <span className="text-2xl">📚</span>
-              <h3 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-purple-200 bg-clip-text text-transparent">
+              <h3 className="text-lg font-bold text-white drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]">
                 FanFic World
               </h3>
             </div>

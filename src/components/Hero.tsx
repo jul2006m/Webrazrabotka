@@ -12,7 +12,7 @@ export default function Hero() {
       
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-          <span className="bg-gradient-to-r from-purple-300 via-purple-400 to-violet-300 bg-clip-text text-transparent">
+          <span className="text-white drop-shadow-[0_0_12px_rgba(168,85,247,0.6)]">
             Добро пожаловать в мир фанфиков
           </span>
         </h2>

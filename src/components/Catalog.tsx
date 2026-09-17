@@ -30,7 +30,7 @@ export default function Catalog() {
     <section id="works" className="py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-3xl font-bold text-center mb-2">
-          <span className="bg-gradient-to-r from-purple-300 to-violet-300 bg-clip-text text-transparent">
+          <span className="text-white drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]">
             Популярные работы
           </span>
         </h2>
