@@ -18,6 +18,7 @@ function AppContent() {
   const [currentView, setCurrentView] = useState<'home' | 'reader'>('home');
   const [selectedFic, setSelectedFic] = useState<FanFic | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingFic, setEditingFic] = useState<FanFic | null>(null);
 
   const handleRead = (fic: FanFic) => {
     setSelectedFic(fic);
@@ -30,8 +31,18 @@ function AppContent() {
     setSelectedFic(null);
   };
 
+  const handleEdit = (fic: FanFic) => {
+    setEditingFic(fic);
+    setShowAddForm(true);
+  };
+
+  const handleCloseForm = () => {
+    setShowAddForm(false);
+    setEditingFic(null);
+  };
+
   if (currentView === 'reader' && selectedFic) {
-    return <FanficReader fic={selectedFic} onBack={handleBack} />;
+    return <FanficReader fic={selectedFic} onBack={handleBack} onEdit={handleEdit} />;
   }
 
   return (
@@ -45,7 +56,7 @@ function AppContent() {
       </main>
       <Footer />
       <ScrollToTop />
-      {showAddForm && <AddFanficForm onClose={() => setShowAddForm(false)} />}
+      {showAddForm && <AddFanficForm onClose={handleCloseForm} editFic={editingFic} />}
     </div>
   );
 }

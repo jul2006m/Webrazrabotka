@@ -55,7 +55,14 @@ export default function FicCard({ fic, onRead }: FicCardProps) {
             {fic.rating}
           </span>
         </div>
-        {fic.status === 'process' && (
+        {fic.isDraft && (
+          <div className="absolute top-3 left-3">
+            <span className="px-2 py-1 text-xs font-bold rounded-md bg-yellow-600/90 text-white border border-yellow-500">
+              📝 Черновик
+            </span>
+          </div>
+        )}
+        {!fic.isDraft && fic.status === 'process' && (
           <div className="absolute top-3 left-3">
             <span className={`px-2 py-1 text-xs font-bold rounded-md border ${
               isDark
@@ -103,6 +110,7 @@ export default function FicCard({ fic, onRead }: FicCardProps) {
           <span>⭐ {fic.likes}</span>
           <span>💬 {fic.comments}</span>
           <span>👁 {fic.views}</span>
+          <span>📑 {fic.chapters.length}</span>
         </div>
 
         {/* Actions */}
@@ -123,7 +131,7 @@ export default function FicCard({ fic, onRead }: FicCardProps) {
             onClick={() => onRead(fic)}
             className="flex-1 py-2 px-3 rounded-lg text-sm font-medium bg-gradient-to-r from-purple-600 to-violet-600 text-white hover:from-purple-500 hover:to-violet-500 transition-all duration-200"
           >
-            📖 Читать
+            {fic.isDraft ? '✏️ Открыть' : '📖 Читать'}
           </button>
         </div>
       </div>
