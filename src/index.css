@@ -5,6 +5,7 @@
   --color-dark-800: #12121a;
   --color-dark-700: #1a1a2e;
   --color-dark-600: #252540;
+  --color-dark-500: #2d2d4a;
   --color-purple-900: #1e1b4b;
   --color-purple-800: #2d1b69;
   --color-purple-700: #4c1d95;
@@ -18,26 +19,53 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: #0a0a0f;
-  color: #e2e8f0;
   margin: 0;
   padding: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark theme (default) */
+body {
+  background-color: #0a0a0f;
+  color: #e2e8f0;
+}
+
+/* Light theme */
+html.light body {
+  background-color: #f9fafb;
+  color: #1f2937;
 }
 
 * {
   scrollbar-width: thin;
+}
+
+html:not(.light) * {
   scrollbar-color: #7c3aed #1a1a2e;
+}
+
+html.light * {
+  scrollbar-color: #a855f7 #f3e8ff;
 }
 
 *::-webkit-scrollbar {
   width: 8px;
 }
 
-*::-webkit-scrollbar-track {
+html:not(.light) *::-webkit-scrollbar-track {
   background: #1a1a2e;
 }
 
-*::-webkit-scrollbar-thumb {
+html.light *::-webkit-scrollbar-track {
+  background: #f3e8ff;
+}
+
+html:not(.light) *::-webkit-scrollbar-thumb {
   background: #7c3aed;
+  border-radius: 4px;
+}
+
+html.light *::-webkit-scrollbar-thumb {
+  background: #a855f7;
   border-radius: 4px;
 }

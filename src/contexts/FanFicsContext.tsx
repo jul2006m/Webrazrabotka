@@ -1,0 +1,416 @@
+import { createContext, useContext, useState, ReactNode } from 'react';
+
+export interface Review {
+  id: number;
+  author: string;
+  text: string;
+  date: string;
+}
+
+export interface Chapter {
+  id: number;
+  title: string;
+  content: string;
+}
+
+export interface PollOption {
+  id: string;
+  label: string;
+  emoji: string;
+}
+
+export interface FanFic {
+  id: number;
+  title: string;
+  author: string;
+  genre: string;
+  rating: string;
+  size: string;
+  annotation: string;
+  chapters: Chapter[];
+  likes: number;
+  comments: number;
+  views: string;
+  status: string;
+  coverColor: string;
+  isDraft: boolean;
+  reviews: Review[];
+  pollQuestion: string;
+  pollOptions: PollOption[];
+  pollResults: Record<string, number>;
+}
+
+interface FanFicsContextType {
+  fanFics: FanFic[];
+  addFanFic: (fic: Omit<FanFic, 'id' | 'likes' | 'comments' | 'views' | 'reviews' | 'pollResults'>) => void;
+  updateFanFic: (ficId: number, updates: Partial<FanFic>) => void;
+  deleteFanFic: (ficId: number) => void;
+  publishDraft: (ficId: number) => void;
+  addReview: (ficId: number, review: Omit<Review, 'id' | 'date'>) => void;
+  voteCharacter: (ficId: number, characterId: string) => void;
+  toggleLike: (ficId: number) => void;
+}
+
+const FanFicsContext = createContext<FanFicsContextType | undefined>(undefined);
+
+const defaultPoll = {
+  pollQuestion: 'Кто ваш любимый персонаж?',
+  pollOptions: [
+    { id: 'a', label: 'Персонаж А', emoji: '✨' },
+    { id: 'b', label: 'Персонаж Б', emoji: '⭐' },
+  ],
+  pollResults: { a: 0, b: 0 },
+};
+
+const initialFanFics: FanFic[] = [
+  {
+    id: 1,
+    title: 'Тени прошлого',
+    author: 'MidnightWriter',
+    genre: 'Драма',
+    rating: 'PG-13',
+    size: 'Миди',
+    annotation: 'Когда прошлое возвращается, чтобы изменить настоящее...',
+    chapters: [
+      {
+        id: 1,
+        title: 'Глава 1. Возвращение',
+        content: `Дождь барабанил по окнам старого особняка, создавая ритмичную мелодию, которая всегда действовала на Элиан успокаивающе. Он стоял у окна библиотеки, глядя на размытые силуэты деревьев в саду. Десять лет. Ровно десять лет прошло с той ночи, когда он покинул этот дом.
+
+"Ты не должен был возвращаться," — прошептал он своему отражению в стекле. Но судьба распорядилась иначе. Письмо от старого адвоката перевернуло всё: наследство, которое он не ожидал, и условия, которые невозможно было принять.
+
+Дверь за его спиной скрипнула. Элиан обернулся и увидел силуэт в дверном проёме — фигуру, которую он надеялся больше никогда не увидеть.
+
+— Я знала, что ты придёшь, — голос был тихим, но в нём звучала сталь. — Добро пожаловать домой, брат.`
+      },
+      {
+        id: 2,
+        title: 'Глава 2. Тайны',
+        content: `Библиотека хранила больше секретов, чем могли представить обитатели дома. За пыльными фолиантами скрывались не только знания, но и доказательства — доказательства того, что семья Элиана была связана с чем-то гораздо более древним и опасным, чем простые родовые тайны.
+
+— Ты помнишь ночь, когда сгорел восточный флигель? — спросила Лира, его сестра, раскладывая на столе пожелтевшие документы.
+
+— Конечно помню. Мне было двенадцать.
+
+— А я помню, что перед пожаром отец что-то искал. Что-то очень важное. И нашёл.
+
+Элиан взял в руки один из документов. Руки задрожали. Это был контракт — старый, на пергаменте, с подписями, которые он не мог прочитать. Но дата... дата была написана чётко: 1847 год.
+
+— Это невозможно, — прошептал он.
+
+— Возможно, — ответила Лира. — И это только начало.`
+      },
+      {
+        id: 3,
+        title: 'Глава 3. Наследие',
+        content: `Прошло уже три дня с того разговора, но Элиан не мог уснуть. Каждую ночь ему снился один и тот же сон: тёмный коридор, в конце которого горел фиолетовый свет. И голос, зовущий его по имени.
+
+Лира нашла его на рассвете в библиотеке. Он сидел среди разложенных документов, водя пальцем по старинной карте.
+
+— Ты нашёл что-то? — спросила она, садясь напротив.
+
+— Думаю, да. — Элиан поднял глаза. В них читалось волнение. — Смотри. Здесь обозначено место, которого нет ни на одной современной карте.
+
+Лира наклонилась ближе. На пожелтевшем пергаменте был изображён лес, а в его центре — здание, похожее на храм.
+
+— Что это?
+
+— Не знаю. Но отец оставил пометку: "Здесь скрыто наше наследие".`
+      }
+    ],
+    likes: 142,
+    comments: 23,
+    views: '1.2k',
+    status: 'process',
+    coverColor: 'from-purple-900 to-indigo-900',
+    isDraft: false,
+    reviews: [
+      { id: 1, author: 'BookWorm42', text: 'Невероятная атмосфера! Читаю на одном дыхании.', date: '2024-03-15' },
+      { id: 2, author: 'FantasyLover', text: 'Интригующее начало, жду продолжения!', date: '2024-03-18' },
+    ],
+    pollQuestion: 'Кто из героев вам ближе?',
+    pollOptions: [
+      { id: 'elian', label: 'Элиан', emoji: '🗡️' },
+      { id: 'lira', label: 'Лира', emoji: '📜' },
+      { id: 'advocate', label: 'Адвокат Морган', emoji: '🎩' },
+      { id: 'father', label: 'Отец (воспоминания)', emoji: '👻' },
+    ],
+    pollResults: { elian: 156, lira: 89, advocate: 45, father: 67 },
+  },
+  {
+    id: 2,
+    title: 'Новая реальность',
+    author: 'DreamSeeker',
+    genre: 'Приключения',
+    rating: 'R',
+    size: 'Макси',
+    annotation: 'Попаданец в мире магии должен выжить любой ценой.',
+    chapters: [
+      {
+        id: 1,
+        title: 'Глава 1. Пробуждение',
+        content: `Первое, что почувствовал Максим — это запах. Запах трав, костра и чего-то ещё... незнакомого, чужого. Он открыл глаза и увидел небо — два неба. Одно было привычно голубым, другое — фиолетовым, с тремя лунами, висевшими над горизонтом.
+
+"Где я?" — мысль промелькнула, но не успела оформиться в полноценный вопрос. Рядом с ним сидела девушка с серебристыми волосами и смотрела на него с любопытством.
+
+— Ты живой, — сказала она на языке, который Максим каким-то чудом понимал. — Я уже начала думать, что ритуал не удался.
+
+— Какой ритуал? Кто ты? Где я?
+
+Девушка усмехнулась.
+— Много вопросов. Меня зовут Эйра. Ты в Эльдории. А ритуал... ну, скажем так, мы тебя призвали.
+
+— Призвали?! — Максим сел, чувствуя, как тело ноет от непривычных ощущений. — Я хочу домой!
+
+— Домой? — Эйра покачала головой. — Это невозможно. По крайней мере, сейчас. Тебе придётся помочь нам, иначе оба мира погибнут.`
+      },
+      {
+        id: 2,
+        title: 'Глава 2. Первые шаги',
+        content: `Эльдория оказалась местом, о котором Максим читал только в фантастических книгах. Магия здесь была не просто сказкой — она пронизывала всё: воздух, камни, деревья. Люди общались с духами, животные говорили (по крайней мере, некоторые), а в небе летали существа, которых он не мог классифицировать.
+
+— Запомни три правила, — наставительно говорила Эйра, ведя его через рынок. — Первое: никогда не произноси имя демона вслух. Второе: не ешь фрукты с серебряной кожурой. И третье...
+
+— Третье?
+
+— Никогда не доверяй эльфам. Особенно тем, кто улыбается.
+
+Максим усмехнулся, но усмешка замерла на его губах, когда он увидел, как к ним приближается высокий мужчина в чёрных одеждах. Его улыбка была идеальной. Слишком идеальной.
+
+— Новые гости? — голос был мягким, как шёлк. — Как интересно.`
+      }
+    ],
+    likes: 256,
+    comments: 45,
+    views: '2.8k',
+    status: 'process',
+    coverColor: 'from-violet-900 to-purple-900',
+    isDraft: false,
+    reviews: [
+      { id: 1, author: 'IsekaiFan', text: 'Классное попаданчество! Герой не типичный лох, это радует.', date: '2024-03-10' },
+    ],
+    pollQuestion: 'С кем бы вы хотели отправиться в путешествие?',
+    pollOptions: [
+      { id: 'maxim', label: 'Максим', emoji: '⚡' },
+      { id: 'eira', label: 'Эйра', emoji: '🌙' },
+      { id: 'elf', label: 'Загадочный эльф', emoji: '🧝' },
+      { id: 'spirit', label: 'Дух-проводник', emoji: '👻' },
+    ],
+    pollResults: { maxim: 78, eira: 134, elf: 56, spirit: 41 },
+  },
+  {
+    id: 3,
+    title: 'Секреты Хогвартса',
+    author: 'MagicLover',
+    genre: 'Юмор',
+    rating: 'G',
+    size: 'Мини',
+    annotation: 'Что скрывают стены древнего замка?',
+    chapters: [
+      {
+        id: 1,
+        title: 'Глава 1. Говорящие портреты',
+        content: `Если вы думаете, что самое странное в Хогвартсе — это призраки, вы глубоко ошибаетесь. Настоящая проблема — это портреты. Особенно те, что висят в северном крыле третьего этажа.
+
+— Опять ты! — возмущённо воскликнул портрет седого волшебника, когда мимо проходил первокурсник по имени Томас. — В третий раз за час! Ты что, заблудился?
+
+— Я не заблудился, — ответил Томас, стараясь не смотреть на портрет. — Просто... карта говорит, что здесь короткий путь.
+
+— Карта?! — портрет закатил глаза (насколько это возможно для нарисованных глаз). — Дай-ка её сюда!
+
+Томас неохотно протянул карту. Портрет (который, как оказалось, мог высовываться из рамки) схватил её и начал изучать.
+
+— Так, так, так... Ага! Вот где ошибка! Это не короткий путь, это путь в кухню через канализацию!
+
+— Что?!
+
+— Ну да. Видишь эту линию? Она ведёт прямо к мусорному ведру. Очень удобно, если ты крыса. Но не человек.
+
+Томас побледнел.
+— Я... я прошёл там вчера.
+
+— Знаю. Я видел. И смеялся. Вместе с сэром Кадуолладером.
+
+Портрет справа (рыцарь в сияющих доспехах) хихикнул:
+— Отличное было зрелище!`
+      }
+    ],
+    likes: 89,
+    comments: 12,
+    views: '890',
+    status: 'completed',
+    coverColor: 'from-indigo-900 to-purple-800',
+    isDraft: false,
+    reviews: [
+      { id: 1, author: 'HPFanForever', text: 'Смешно! Портреты — моя слабость 😂', date: '2024-03-20' },
+      { id: 2, author: 'LaughingMage', text: 'Хогвартс таким и должен быть!', date: '2024-03-22' },
+    ],
+    pollQuestion: 'Какой портрет самый забавный?',
+    pollOptions: [
+      { id: 'thomas', label: 'Томас', emoji: '🧒' },
+      { id: 'wizard', label: 'Седой волшебник', emoji: '🧙‍♂️' },
+      { id: 'knight', label: 'Сэр Кадуолладер', emoji: '🛡️' },
+      { id: 'fatlady', label: 'Толстая Леди', emoji: '👸' },
+    ],
+    pollResults: { thomas: 45, wizard: 120, knight: 89, fatlady: 34 },
+  },
+  {
+    id: 4,
+    title: 'Любовь и магия',
+    author: 'RomanceQueen',
+    genre: 'Романтика',
+    rating: 'PG-13',
+    size: 'Миди',
+    annotation: 'История о запретной любви в мире волшебства.',
+    chapters: [
+      {
+        id: 1,
+        title: 'Глава 1. Встреча на балу',
+        content: `Свет люстр отражался в хрустальных бокалах, создавая тысячу маленьких звёзд под потолком бального зала. Ариана стояла у колонны, наблюдая за танцующими. Она не должна была здесь быть — она была целительницей, а не аристократкой. Но приглашение пришло, и отказать было невозможно.
+
+— Вы не танцуете, — раздался голос за её спиной. Глубокий, с лёгкой хрипотцой.
+
+Ариана обернулась и встретилась взглядом с мужчиной в чёрном мундире. Его глаза были серыми, как грозовое небо, а на губах играла едва заметная улыбка.
+
+— Я... не очень хорошо танцую, — солгала она. На самом деле она танцевала прекрасно — её мать была бывшей прима-балериной.
+
+— Как жаль, — он поклонился. — Каспиан Вольф. К вашим услугам.
+
+— Ариана Лэсситер.
+
+Они посмотрели друг на друга, и что-то между ними изменилось. Воздух стал плотнее, а музыка — громче. Каспиан протянул руку.
+
+— Один танец?
+
+Ариана знала, что должна отказаться. Знала, что Каспиан Вольф — опасный человек, глава тайного ордена, о котором ходили страшные слухи. Но его рука была тёплой, а глаза — искренними.
+
+Она вложила свою ладонь в его.`
+      },
+      {
+        id: 2,
+        title: 'Глава 2. Запретное',
+        content: `Они встречались тайно. В старом парке, где ивы плакали над прудом. В библиотеке, между стеллажами с запрещёнными книгами. На крыше обсерватории, под звёздами, которые, казалось, подмигивали им.
+
+— Почему ты рискуешь ради меня? — спросила как-то Ариана.
+
+Каспиан долго молчал, глядя на луну.
+— Потому что впервые за сто лет я чувствую себя живым.
+
+— Сто лет? — прошептала она, понимая, что он имел в виду.
+
+— Я не расскажу тебе всё, — сказал он. — Но знай: то, что между нами — это не просто магия. Это нечто большее.`
+      }
+    ],
+    likes: 312,
+    comments: 67,
+    views: '3.5k',
+    status: 'completed',
+    coverColor: 'from-fuchsia-900 to-purple-900',
+    isDraft: false,
+    reviews: [
+      { id: 1, author: 'RomanceAddict', text: 'Каспиан 🥺 Мой новый книжный бойфренд!', date: '2024-03-12' },
+      { id: 2, author: 'MagicAndLove', text: 'Прекрасный слог, читаю запоем.', date: '2024-03-14' },
+      { id: 3, author: 'NightReader', text: 'Атмосферно и романтично!', date: '2024-03-16' },
+    ],
+    pollQuestion: 'За какую пару вы болеете?',
+    pollOptions: [
+      { id: 'ariana', label: 'Ариана', emoji: '💫' },
+      { id: 'caspian', label: 'Каспиан', emoji: '🖤' },
+      { id: 'mother', label: 'Мать Арианы', emoji: '🌹' },
+      { id: 'rival', label: 'Соперница', emoji: '🔥' },
+    ],
+    pollResults: { ariana: 156, caspian: 234, mother: 45, rival: 67 },
+  },
+];
+
+export function FanFicsProvider({ children }: { children: ReactNode }) {
+  const [fanFics, setFanFics] = useState<FanFic[]>(initialFanFics);
+
+  const addFanFic = (fic: Omit<FanFic, 'id' | 'likes' | 'comments' | 'views' | 'reviews' | 'pollResults'>) => {
+    const pollResults: Record<string, number> = {};
+    (fic.pollOptions || defaultPoll.pollOptions).forEach(opt => {
+      pollResults[opt.id] = 0;
+    });
+
+    const newFic: FanFic = {
+      ...fic,
+      pollQuestion: fic.pollQuestion || defaultPoll.pollQuestion,
+      pollOptions: fic.pollOptions || defaultPoll.pollOptions,
+      id: Date.now(),
+      likes: 0,
+      comments: 0,
+      views: '0',
+      reviews: [],
+      pollResults,
+    };
+    setFanFics(prev => [newFic, ...prev]);
+  };
+
+  const updateFanFic = (ficId: number, updates: Partial<FanFic>) => {
+    setFanFics(prev =>
+      prev.map(fic => (fic.id === ficId ? { ...fic, ...updates } : fic))
+    );
+  };
+
+  const deleteFanFic = (ficId: number) => {
+    setFanFics(prev => prev.filter(fic => fic.id !== ficId));
+  };
+
+  const publishDraft = (ficId: number) => {
+    setFanFics(prev =>
+      prev.map(fic => (fic.id === ficId ? { ...fic, isDraft: false } : fic))
+    );
+  };
+
+  const addReview = (ficId: number, review: Omit<Review, 'id' | 'date'>) => {
+    setFanFics(prev =>
+      prev.map(fic =>
+        fic.id === ficId
+          ? {
+              ...fic,
+              reviews: [
+                ...fic.reviews,
+                { ...review, id: Date.now(), date: new Date().toISOString().split('T')[0] },
+              ],
+              comments: fic.comments + 1,
+            }
+          : fic
+      )
+    );
+  };
+
+  const voteCharacter = (ficId: number, characterId: string) => {
+    setFanFics(prev =>
+      prev.map(fic => {
+        if (fic.id !== ficId) return fic;
+        return {
+          ...fic,
+          pollResults: {
+            ...fic.pollResults,
+            [characterId]: (fic.pollResults[characterId] || 0) + 1,
+          },
+        };
+      })
+    );
+  };
+
+  const toggleLike = (ficId: number) => {
+    setFanFics(prev =>
+      prev.map(fic =>
+        fic.id === ficId ? { ...fic, likes: fic.likes + 1 } : fic
+      )
+    );
+  };
+
+  return (
+    <FanFicsContext.Provider value={{ fanFics, addFanFic, updateFanFic, deleteFanFic, publishDraft, addReview, voteCharacter, toggleLike }}>
+      {children}
+    </FanFicsContext.Provider>
+  );
+}
+
+export function useFanFics() {
+  const ctx = useContext(FanFicsContext);
+  if (!ctx) throw new Error('useFanFics must be used within FanFicsProvider');
+  return ctx;
+}
