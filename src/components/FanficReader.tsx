@@ -2,16 +2,19 @@ import { useState } from 'react';
 import { FanFic } from '../contexts/FanFicsContext';
 import { useFanFics } from '../contexts/FanFicsContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Props {
   fic: FanFic;
   onBack: () => void;
   onEdit: (fic: FanFic) => void;
+  onRequireAuth: () => void;
 }
 
-export default function FanficReader({ fic, onBack, onEdit }: Props) {
+export default function FanficReader({ fic, onBack, onEdit, onRequireAuth }: Props) {
   const { addReview, voteCharacter } = useFanFics();
   const { theme } = useTheme();
+  const { user, profile } = useAuth();
   const [reviewName, setReviewName] = useState('');
   const [reviewText, setReviewText] = useState('');
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
@@ -40,8 +43,12 @@ export default function FanficReader({ fic, onBack, onEdit }: Props) {
 
   const handleSubmitReview = (e: React.FormEvent) => {
     e.preventDefault();
-    if (reviewName && reviewText) {
-      addReview(fic.id, { author: reviewName, text: reviewText });
+    if (!user) {
+      onRequireAuth();
+      return;
+    }
+    if (reviewText) {
+      addReview(fic.id, { author: profile?.username || 'Аноним', text: reviewText });
       setReviewName('');
       setReviewText('');
       setReviewSubmitted(true);
@@ -50,6 +57,10 @@ export default function FanficReader({ fic, onBack, onEdit }: Props) {
   };
 
   const handleVote = (characterId: string) => {
+    if (!user) {
+      onRequireAuth();
+      return;
+    }
     if (!voted) {
       voteCharacter(fic.id, characterId);
       setVotedCharacter(characterId);
@@ -295,25 +306,30 @@ export default function FanficReader({ fic, onBack, onEdit }: Props) {
               <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-purple-200' : 'text-purple-800'}`}>
                 ✍️ Оставить отзыв
               </h3>
-              {reviewSubmitted ? (
+              {!user ? (
+                <div className="text-center py-6">
+                  <p className={`mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Войдите, чтобы оставить отзыв
+                  </p>
+                  <button
+                    onClick={onRequireAuth}
+                    className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-violet-600 text-white font-semibold rounded-lg hover:from-purple-500 hover:to-violet-500 transition-all"
+                  >
+                    🔐 Войти
+                  </button>
+                </div>
+              ) : reviewSubmitted ? (
                 <div className="text-center py-4">
                   <span className="text-3xl block mb-2">🎉</span>
                   <p className="text-green-500 font-medium">Спасибо за отзыв!</p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmitReview} className="space-y-3">
-                  <input
-                    type="text"
-                    value={reviewName}
-                    onChange={(e) => setReviewName(e.target.value)}
-                    placeholder="Ваше имя"
-                    required
-                    className={`w-full px-4 py-2.5 rounded-lg border transition-all ${
-                      isDark
-                        ? 'bg-dark-600 border-purple-700/30 text-gray-200 placeholder-gray-500 focus:border-purple-500'
-                        : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-purple-500'
-                    } focus:outline-none focus:ring-1 focus:ring-purple-500`}
-                  />
+                  <div className={`p-3 rounded-lg text-sm ${
+                    isDark ? 'bg-purple-900/20 text-purple-300' : 'bg-purple-50 text-purple-700'
+                  }`}>
+                    Отзыв от имени: <strong>{profile?.username}</strong>
+                  </div>
                   <textarea
                     value={reviewText}
                     onChange={(e) => setReviewText(e.target.value)}
@@ -374,7 +390,19 @@ export default function FanficReader({ fic, onBack, onEdit }: Props) {
               📊 {fic.pollQuestion}
             </h3>
 
-            {!voted ? (
+            {!user ? (
+              <div className="text-center py-6">
+                <p className={`mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Войдите, чтобы проголосовать
+                </p>
+                <button
+                  onClick={onRequireAuth}
+                  className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-violet-600 text-white font-semibold rounded-lg hover:from-purple-500 hover:to-violet-500 transition-all"
+                >
+                  🔐 Войти
+                </button>
+              </div>
+            ) : !voted ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {characters.map(char => (
                   <button

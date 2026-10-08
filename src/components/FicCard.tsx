@@ -2,19 +2,26 @@ import { useState } from 'react';
 import { FanFic } from '../contexts/FanFicsContext';
 import { useFanFics } from '../contexts/FanFicsContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface FicCardProps {
   fic: FanFic;
   onRead: (fic: FanFic) => void;
+  onRequireAuth: () => void;
 }
 
-export default function FicCard({ fic, onRead }: FicCardProps) {
+export default function FicCard({ fic, onRead, onRequireAuth }: FicCardProps) {
   const { toggleLike } = useFanFics();
   const { theme } = useTheme();
+  const { user } = useAuth();
   const isDark = theme === 'dark';
   const [liked, setLiked] = useState(false);
 
   const handleLike = () => {
+    if (!user) {
+      onRequireAuth();
+      return;
+    }
     toggleLike(fic.id);
     setLiked(!liked);
   };

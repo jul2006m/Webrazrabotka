@@ -5,9 +5,10 @@ import FicCard from './FicCard';
 
 interface Props {
   onRead: (fic: FanFic) => void;
+  onRequireAuth: () => void;
 }
 
-export default function Catalog({ onRead }: Props) {
+export default function Catalog({ onRead, onRequireAuth }: Props) {
   const { fanFics } = useFanFics();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -82,7 +83,7 @@ export default function Catalog({ onRead }: Props) {
         {filteredFics.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredFics.map(fic => (
-              <FicCard key={fic.id} fic={fic} onRead={onRead} />
+              <FicCard key={fic.id} fic={fic} onRead={onRead} onRequireAuth={onRequireAuth} />
             ))}
           </div>
         ) : (
