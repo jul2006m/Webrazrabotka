@@ -13,6 +13,12 @@ export interface Chapter {
   content: string;
 }
 
+export interface PollOption {
+  id: string;
+  label: string;
+  emoji: string;
+}
+
 export interface FanFic {
   id: number;
   title: string;
@@ -29,7 +35,9 @@ export interface FanFic {
   coverColor: string;
   isDraft: boolean;
   reviews: Review[];
-  pollResults: { hermione: number; draco: number; harry: number; snape: number };
+  pollQuestion: string;
+  pollOptions: PollOption[];
+  pollResults: Record<string, number>;
 }
 
 interface FanFicsContextType {
@@ -39,11 +47,20 @@ interface FanFicsContextType {
   deleteFanFic: (ficId: number) => void;
   publishDraft: (ficId: number) => void;
   addReview: (ficId: number, review: Omit<Review, 'id' | 'date'>) => void;
-  voteCharacter: (ficId: number, character: keyof FanFic['pollResults']) => void;
+  voteCharacter: (ficId: number, characterId: string) => void;
   toggleLike: (ficId: number) => void;
 }
 
 const FanFicsContext = createContext<FanFicsContextType | undefined>(undefined);
+
+const defaultPoll = {
+  pollQuestion: 'Кто ваш любимый персонаж?',
+  pollOptions: [
+    { id: 'a', label: 'Персонаж А', emoji: '✨' },
+    { id: 'b', label: 'Персонаж Б', emoji: '⭐' },
+  ],
+  pollResults: { a: 0, b: 0 },
+};
 
 const initialFanFics: FanFic[] = [
   {
@@ -60,7 +77,7 @@ const initialFanFics: FanFic[] = [
         title: 'Глава 1. Возвращение',
         content: `Дождь барабанил по окнам старого особняка, создавая ритмичную мелодию, которая всегда действовала на Элиан успокаивающе. Он стоял у окна библиотеки, глядя на размытые силуэты деревьев в саду. Десять лет. Ровно десять лет прошло с той ночи, когда он покинул этот дом.
 
-"Ты не должен был возвращать," — прошептал он своему отражению в стекле. Но судьба распорядилась иначе. Письмо от старого адвоката перевернуло всё: наследство, которое он не ожидал, и условия, которые невозможно было принять.
+"Ты не должен был возвращаться," — прошептал он своему отражению в стекле. Но судьба распорядилась иначе. Письмо от старого адвоката перевернуло всё: наследство, которое он не ожидал, и условия, которые невозможно было принять.
 
 Дверь за его спиной скрипнула. Элиан обернулся и увидел силуэт в дверном проёме — фигуру, которую он надеялся больше никогда не увидеть.
 
@@ -111,7 +128,14 @@ const initialFanFics: FanFic[] = [
       { id: 1, author: 'BookWorm42', text: 'Невероятная атмосфера! Читаю на одном дыхании.', date: '2024-03-15' },
       { id: 2, author: 'FantasyLover', text: 'Интригующее начало, жду продолжения!', date: '2024-03-18' },
     ],
-    pollResults: { hermione: 45, draco: 67, harry: 32, snape: 28 },
+    pollQuestion: 'Кто из героев вам ближе?',
+    pollOptions: [
+      { id: 'elian', label: 'Элиан', emoji: '🗡️' },
+      { id: 'lira', label: 'Лира', emoji: '📜' },
+      { id: 'advocate', label: 'Адвокат Морган', emoji: '🎩' },
+      { id: 'father', label: 'Отец (воспоминания)', emoji: '👻' },
+    ],
+    pollResults: { elian: 156, lira: 89, advocate: 45, father: 67 },
   },
   {
     id: 2,
@@ -165,7 +189,14 @@ const initialFanFics: FanFic[] = [
     reviews: [
       { id: 1, author: 'IsekaiFan', text: 'Классное попаданчество! Герой не типичный лох, это радует.', date: '2024-03-10' },
     ],
-    pollResults: { hermione: 78, draco: 34, harry: 56, snape: 41 },
+    pollQuestion: 'С кем бы вы хотели отправиться в путешествие?',
+    pollOptions: [
+      { id: 'maxim', label: 'Максим', emoji: '⚡' },
+      { id: 'eira', label: 'Эйра', emoji: '🌙' },
+      { id: 'elf', label: 'Загадочный эльф', emoji: '🧝' },
+      { id: 'spirit', label: 'Дух-проводник', emoji: '👻' },
+    ],
+    pollResults: { maxim: 78, eira: 134, elf: 56, spirit: 41 },
   },
   {
     id: 3,
@@ -214,7 +245,14 @@ const initialFanFics: FanFic[] = [
       { id: 1, author: 'HPFanForever', text: 'Смешно! Портреты — моя слабость 😂', date: '2024-03-20' },
       { id: 2, author: 'LaughingMage', text: 'Хогвартс таким и должен быть!', date: '2024-03-22' },
     ],
-    pollResults: { hermione: 120, draco: 45, harry: 89, snape: 34 },
+    pollQuestion: 'Какой портрет самый забавный?',
+    pollOptions: [
+      { id: 'thomas', label: 'Томас', emoji: '🧒' },
+      { id: 'wizard', label: 'Седой волшебник', emoji: '🧙‍♂️' },
+      { id: 'knight', label: 'Сэр Кадуолладер', emoji: '🛡️' },
+      { id: 'fatlady', label: 'Толстая Леди', emoji: '👸' },
+    ],
+    pollResults: { thomas: 45, wizard: 120, knight: 89, fatlady: 34 },
   },
   {
     id: 4,
@@ -274,7 +312,14 @@ const initialFanFics: FanFic[] = [
       { id: 2, author: 'MagicAndLove', text: 'Прекрасный слог, читаю запоем.', date: '2024-03-14' },
       { id: 3, author: 'NightReader', text: 'Атмосферно и романтично!', date: '2024-03-16' },
     ],
-    pollResults: { hermione: 34, draco: 156, harry: 22, snape: 89 },
+    pollQuestion: 'За какую пару вы болеете?',
+    pollOptions: [
+      { id: 'ariana', label: 'Ариана', emoji: '💫' },
+      { id: 'caspian', label: 'Каспиан', emoji: '🖤' },
+      { id: 'mother', label: 'Мать Арианы', emoji: '🌹' },
+      { id: 'rival', label: 'Соперница', emoji: '🔥' },
+    ],
+    pollResults: { ariana: 156, caspian: 234, mother: 45, rival: 67 },
   },
 ];
 
@@ -282,14 +327,21 @@ export function FanFicsProvider({ children }: { children: ReactNode }) {
   const [fanFics, setFanFics] = useState<FanFic[]>(initialFanFics);
 
   const addFanFic = (fic: Omit<FanFic, 'id' | 'likes' | 'comments' | 'views' | 'reviews' | 'pollResults'>) => {
+    const pollResults: Record<string, number> = {};
+    (fic.pollOptions || defaultPoll.pollOptions).forEach(opt => {
+      pollResults[opt.id] = 0;
+    });
+
     const newFic: FanFic = {
       ...fic,
+      pollQuestion: fic.pollQuestion || defaultPoll.pollQuestion,
+      pollOptions: fic.pollOptions || defaultPoll.pollOptions,
       id: Date.now(),
       likes: 0,
       comments: 0,
       views: '0',
       reviews: [],
-      pollResults: { hermione: 0, draco: 0, harry: 0, snape: 0 },
+      pollResults,
     };
     setFanFics(prev => [newFic, ...prev]);
   };
@@ -327,13 +379,18 @@ export function FanFicsProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const voteCharacter = (ficId: number, character: keyof FanFic['pollResults']) => {
+  const voteCharacter = (ficId: number, characterId: string) => {
     setFanFics(prev =>
-      prev.map(fic =>
-        fic.id === ficId
-          ? { ...fic, pollResults: { ...fic.pollResults, [character]: fic.pollResults[character] + 1 } }
-          : fic
-      )
+      prev.map(fic => {
+        if (fic.id !== ficId) return fic;
+        return {
+          ...fic,
+          pollResults: {
+            ...fic.pollResults,
+            [characterId]: (fic.pollResults[characterId] || 0) + 1,
+          },
+        };
+      })
     );
   };
 

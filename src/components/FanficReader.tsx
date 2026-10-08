@@ -49,22 +49,17 @@ export default function FanficReader({ fic, onBack, onEdit }: Props) {
     }
   };
 
-  const handleVote = (character: string) => {
+  const handleVote = (characterId: string) => {
     if (!voted) {
-      voteCharacter(fic.id, character as keyof FanFic['pollResults']);
-      setVotedCharacter(character);
+      voteCharacter(fic.id, characterId);
+      setVotedCharacter(characterId);
       setVoted(true);
     }
   };
 
   const totalVotes = Object.values(fic.pollResults).reduce((a, b) => a + b, 0);
 
-  const characters = [
-    { value: 'hermione', label: 'Гермиона', emoji: '🧙‍♀️' },
-    { value: 'draco', label: 'Драко', emoji: '🐍' },
-    { value: 'harry', label: 'Гарри', emoji: '⚡' },
-    { value: 'snape', label: 'Снейп', emoji: '🖤' },
-  ];
+  const characters = fic.pollOptions;
 
   return (
     <div className={`min-h-screen ${isDark ? 'bg-dark-900 text-gray-200' : 'bg-gray-50 text-gray-900'}`}>
@@ -376,15 +371,15 @@ export default function FanficReader({ fic, onBack, onEdit }: Props) {
             isDark ? 'bg-dark-700/80 border-purple-800/30' : 'bg-white border-purple-200 shadow-sm'
           }`}>
             <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-purple-200' : 'text-purple-800'}`}>
-              📊 Кто ваш любимый персонаж?
+              📊 {fic.pollQuestion}
             </h3>
 
             {!voted ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {characters.map(char => (
                   <button
-                    key={char.value}
-                    onClick={() => handleVote(char.value)}
+                    key={char.id}
+                    onClick={() => handleVote(char.id)}
                     className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${
                       isDark
                         ? 'bg-dark-600/50 border-purple-700/30 text-gray-300 hover:border-purple-500 hover:bg-purple-800/30'
@@ -400,10 +395,10 @@ export default function FanficReader({ fic, onBack, onEdit }: Props) {
               <div className="space-y-3">
                 <p className="text-green-500 text-center mb-4">✅ Спасибо за ваш голос!</p>
                 {characters.map(char => {
-                  const count = fic.pollResults[char.value as keyof typeof fic.pollResults];
+                  const count = fic.pollResults[char.id] || 0;
                   const percentage = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
                   return (
-                    <div key={char.value} className="space-y-1">
+                    <div key={char.id} className="space-y-1">
                       <div className="flex justify-between text-sm">
                         <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>
                           {char.emoji} {char.label}

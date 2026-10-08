@@ -82,7 +82,14 @@ export default function AddFanficForm({ onClose, editFic }: Props) {
 
     const ficData = {
       title, author, genre, rating, size, annotation,
-      chapters, status, coverColor, isDraft: asDraft
+      chapters, status, coverColor, isDraft: asDraft,
+      pollQuestion: editFic?.pollQuestion || 'Кто ваш любимый персонаж?',
+      pollOptions: editFic?.pollOptions || [
+        { id: 'a', label: 'Персонаж А', emoji: '✨' },
+        { id: 'b', label: 'Персонаж Б', emoji: '⭐' },
+        { id: 'c', label: 'Персонаж В', emoji: '🌟' },
+        { id: 'd', label: 'Персонаж Г', emoji: '💫' },
+      ],
     };
 
     if (editFic) {
