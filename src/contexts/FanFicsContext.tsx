@@ -324,7 +324,31 @@ const initialFanFics: FanFic[] = [
 ];
 
 export function FanFicsProvider({ children }: { children: ReactNode }) {
-  const [fanFics, setFanFics] = useState<FanFic[]>(initialFanFics);
+  // Сохранение состояния в localStorage для persistence
+  const saveToStorage = (fics: FanFic[]) => {
+    try {
+      localStorage.setItem('fanfics_state', JSON.stringify(fics));
+    } catch (e) {
+      console.warn('Не удалось сохранить в localStorage', e);
+    }
+  };
+
+  // Загружаем сохранённое состояние из localStorage
+  const [fanFics, setFanFics] = useState<FanFic[]>(() => {
+    try {
+      const saved = localStorage.getItem('fanfics_state');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Объединяем сохранённые данные с начальными (для новых фанфиков)
+        const savedIds = new Set(parsed.map((f: FanFic) => f.id));
+        const newFics = initialFanFics.filter(f => !savedIds.has(f.id));
+        return [...parsed, ...newFics];
+      }
+    } catch (e) {
+      console.warn('Не удалось загрузить из localStorage', e);
+    }
+    return initialFanFics;
+  });
 
   const addFanFic = (fic: Omit<FanFic, 'id' | 'likes' | 'comments' | 'views' | 'reviews' | 'pollResults'>) => {
     const pollResults: Record<string, number> = {};
@@ -343,28 +367,49 @@ export function FanFicsProvider({ children }: { children: ReactNode }) {
       reviews: [],
       pollResults,
     };
-    setFanFics(prev => [newFic, ...prev]);
+    setFanFics(prev => {
+      const updated = [newFic, ...prev];
+      saveToStorage(updated);
+      return updated;
+    });
   };
 
   const updateFanFic = (ficId: number, updates: Partial<FanFic>) => {
-    setFanFics(prev =>
-      prev.map(fic => (fic.id === ficId ? { ...fic, ...updates } : fic))
-    );
+    setFanFics(prev => {
+      const updated = prev.map(fic => (fic.id === ficId ? { ...fic, ...updates } : fic));
+      saveToStorage(updated);
+      return updated;
+    });
   };
 
   const deleteFanFic = (ficId: number) => {
-    setFanFics(prev => prev.filter(fic => fic.id !== ficId));
+    setFanFics(prev => {
+      const updated = prev.filter(fic => fic.id !== ficId);
+      saveToStorage(updated);
+      return updated;
+    });
   };
 
   const publishDraft = (ficId: number) => {
-    setFanFics(prev =>
-      prev.map(fic => (fic.id === ficId ? { ...fic, isDraft: false } : fic))
-    );
+    setFanFics(prev => {
+      const updated = prev.map(fic => (fic.id === ficId ? { ...fic, isDraft: false } : fic));
+      saveToStorage(updated);
+      return updated;
+    });
+  };
+
+  // Сохранение состояния в localStorage для persistence
+  const saveToStorage = (fics: FanFic[]) => {
+    try {
+      localStorage.setItem('fanfics_state', JSON.stringify(fics));
+    } catch (e) {
+      console.warn('Не удалось сохранить в localStorage', e);
+    }
   };
 
   const addReview = (ficId: number, review: Omit<Review, 'id' | 'date'>) => {
-    setFanFics(prev =>
-      prev.map(fic =>
+    setFanFics(prev => {
+      const updated = prev.map(fic =>
         fic.id === ficId
           ? {
               ...fic,
@@ -375,13 +420,15 @@ export function FanFicsProvider({ children }: { children: ReactNode }) {
               comments: fic.comments + 1,
             }
           : fic
-      )
-    );
+      );
+      saveToStorage(updated);
+      return updated;
+    });
   };
 
   const voteCharacter = (ficId: number, characterId: string) => {
-    setFanFics(prev =>
-      prev.map(fic => {
+    setFanFics(prev => {
+      const updated = prev.map(fic => {
         if (fic.id !== ficId) return fic;
         return {
           ...fic,
@@ -390,16 +437,20 @@ export function FanFicsProvider({ children }: { children: ReactNode }) {
             [characterId]: (fic.pollResults[characterId] || 0) + 1,
           },
         };
-      })
-    );
+      });
+      saveToStorage(updated);
+      return updated;
+    });
   };
 
   const toggleLike = (ficId: number) => {
-    setFanFics(prev =>
-      prev.map(fic =>
+    setFanFics(prev => {
+      const updated = prev.map(fic =>
         fic.id === ficId ? { ...fic, likes: fic.likes + 1 } : fic
-      )
-    );
+      );
+      saveToStorage(updated);
+      return updated;
+    });
   };
 
   return (
