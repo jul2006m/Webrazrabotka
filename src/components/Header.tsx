@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
+import AuthModal from './AuthModal';
 
 interface Props {
   onAddFanfic: () => void;
@@ -7,7 +9,9 @@ interface Props {
 
 export default function Header({ onAddFanfic }: Props) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const { user, profile, signOut, isDemo } = useAuth();
   const isDark = theme === 'dark';
 
   return (
@@ -64,6 +68,56 @@ export default function Header({ onAddFanfic }: Props) {
               {isDark ? '🌙' : '☀️'}
             </button>
 
+            {/* Auth button / Profile */}
+            {user && profile ? (
+              <div className="relative group">
+                <button className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                  isDark ? 'hover:bg-dark-700' : 'hover:bg-gray-100'
+                }`}>
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center text-white font-bold text-sm">
+                    {profile.username.charAt(0).toUpperCase()}
+                  </div>
+                  <span className={`hidden sm:inline text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                    {profile.username}
+                  </span>
+                  {isDemo && (
+                    <span className="text-xs text-yellow-400">👤</span>
+                  )}
+                </button>
+                <div className={`absolute right-0 top-full mt-2 w-48 rounded-lg border shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all ${
+                  isDark ? 'bg-dark-700 border-purple-800/30' : 'bg-white border-purple-200'
+                }`}>
+                  <div className={`p-3 border-b ${isDark ? 'border-purple-800/30' : 'border-purple-200'}`}>
+                    <p className={`text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
+                      {profile.username}
+                    </p>
+                    <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                      {isDemo ? 'Демо-режим' : user.email}
+                    </p>
+                  </div>
+                  <button
+                    onClick={signOut}
+                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                      isDark ? 'text-gray-300 hover:bg-dark-600' : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    🚪 Выйти
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsAuthOpen(true)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
+                  isDark
+                    ? 'bg-dark-700 border border-purple-700/50 text-purple-300 hover:bg-purple-800/30'
+                    : 'bg-purple-50 border border-purple-200 text-purple-700 hover:bg-purple-100'
+                }`}
+              >
+                🔐 Войти
+              </button>
+            )}
+
             {/* Mobile menu button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -96,6 +150,7 @@ export default function Header({ onAddFanfic }: Props) {
           </nav>
         )}
       </div>
+      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </header>
   );
 }

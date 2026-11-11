@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { FanFicsProvider } from './contexts/FanFicsContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { FanFic } from './contexts/FanFicsContext';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -11,14 +12,17 @@ import FanficReader from './components/FanficReader';
 import AddFanficForm from './components/AddFanficForm';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
+import AuthModal from './components/AuthModal';
 
 function AppContent() {
   const { theme } = useTheme();
+  const { user } = useAuth();
   const isDark = theme === 'dark';
   const [currentView, setCurrentView] = useState<'home' | 'reader'>('home');
   const [selectedFic, setSelectedFic] = useState<FanFic | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingFic, setEditingFic] = useState<FanFic | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const handleRead = (fic: FanFic) => {
     setSelectedFic(fic);
@@ -41,8 +45,12 @@ function AppContent() {
     setEditingFic(null);
   };
 
+  const handleRequireAuth = () => {
+    setShowAuthModal(true);
+  };
+
   if (currentView === 'reader' && selectedFic) {
-    return <FanficReader fic={selectedFic} onBack={handleBack} onEdit={handleEdit} />;
+    return <FanficReader fic={selectedFic} onBack={handleBack} onEdit={handleEdit} onRequireAuth={handleRequireAuth} />;
   }
 
   return (
@@ -52,11 +60,12 @@ function AppContent() {
         <Hero />
         <QuoteSection />
         <Filters />
-        <Catalog onRead={handleRead} />
+        <Catalog onRead={handleRead} onRequireAuth={handleRequireAuth} />
       </main>
       <Footer />
       <ScrollToTop />
       {showAddForm && <AddFanficForm onClose={handleCloseForm} editFic={editingFic} />}
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   );
 }
@@ -64,9 +73,11 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider>
-      <FanFicsProvider>
-        <AppContent />
-      </FanFicsProvider>
+      <AuthProvider>
+        <FanFicsProvider>
+          <AppContent />
+        </FanFicsProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
